@@ -1,0 +1,109 @@
+Simple, incomplete, DNS query example
+using Singkong programming language
+Query: example.com
+The transaction ID matched: [41, 125]
+This is a response
+From a standard query
+Not an authoritative answer
+Message was not truncated
+Recursion was desired
+Recursion was not available
+Reserved bits are zero. Correct.
+Successful response.
+Question count: 1
+Answer count: 6
+Authority record count: 0
+Additional record count: 0
+Query name length: 7
+Query domain: ["e", "x", "a", "m", "p", "l", "e"]
+Query ext length: 3
+Query ext: ["c", "o", "m"]
+Query name OK
+Type: 1, A, Host Address
+Class: 1, IN, Internet
+Answer section
+Answer: 1
+A pointer (name compression)
+Note: recursive parsing is not performed
+Length byte: 7
+["e", "x", "a", "m", "p", "l", "e"]
+Length byte: 3
+["c", "o", "m"]
+RR Type: 1
+An A Record
+RR Class: 1
+IN (Internet)
+Time To Live: 232
+RR RD Length: 4
+IP: [23, 192, 228, 80]
+Answer: 2
+A pointer (name compression)
+Note: recursive parsing is not performed
+Length byte: 7
+["e", "x", "a", "m", "p", "l", "e"]
+Length byte: 3
+["c", "o", "m"]
+RR Type: 1
+An A Record
+RR Class: 1
+IN (Internet)
+Time To Live: 232
+RR RD Length: 4
+IP: [23, 192, 228, 84]
+Answer: 3
+A pointer (name compression)
+Note: recursive parsing is not performed
+Length byte: 7
+["e", "x", "a", "m", "p", "l", "e"]
+Length byte: 3
+["c", "o", "m"]
+RR Type: 1
+An A Record
+RR Class: 1
+IN (Internet)
+Time To Live: 232
+RR RD Length: 4
+IP: [23, 215, 0, 136]
+Answer: 4
+A pointer (name compression)
+Note: recursive parsing is not performed
+Length byte: 7
+["e", "x", "a", "m", "p", "l", "e"]
+Length byte: 3
+["c", "o", "m"]
+RR Type: 1
+An A Record
+RR Class: 1
+IN (Internet)
+Time To Live: 232
+RR RD Length: 4
+IP: [23, 215, 0, 138]
+Answer: 5
+A pointer (name compression)
+Note: recursive parsing is not performed
+Length byte: 7
+["e", "x", "a", "m", "p", "l", "e"]
+Length byte: 3
+["c", "o", "m"]
+RR Type: 1
+An A Record
+RR Class: 1
+IN (Internet)
+Time To Live: 232
+RR RD Length: 4
+IP: [96, 7, 128, 175]
+Answer: 6
+A pointer (name compression)
+Note: recursive parsing is not performed
+Length byte: 7
+["e", "x", "a", "m", "p", "l", "e"]
+Length byte: 3
+["c", "o", "m"]
+RR Type: 1
+An A Record
+RR Class: 1
+IN (Internet)
+Time To Live: 232
+RR RD Length: 4
+IP: [96, 7, 128, 198]
+Authority section and additional section are not interpreted.

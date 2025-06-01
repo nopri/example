@@ -1,0 +1,278 @@
+#
+    dns_query.singkong
+
+    Started by Noprianto <nop@noprianto.com>
+    Simple, incomplete DNS query example
+    using Singkong programming language.
+    https://nopri.github.io
+
+    java -DSINGKONG=0 -jar Singkong.jar dns_query.singkong
+    (or bundle dns_query.singkong with Singkong.jar)
+
+    This implementation, though incomplete, 
+    incorporates parsing principles 
+    learned through discussions with 
+    Google Gemini regarding DNS queries.
+
+    The code below needs cleanup.
+    Some of the functionalities 
+    might be added later to the 
+    Singkong interpreter as needed.
+
+    The code is in the public domain.
+;
+
+var ord_arr = fn(s) {    
+    var res = []
+    each(array(s), fn(e, i) {
+        res + ord(e)
+    })
+    return res
+}
+
+var chr_arr = fn(s) {    
+    var res = []
+    each(s, fn(e, i) {
+        res + chr(e)
+    })
+    return res
+}
+
+var byte_to_unsigned = fn(a) {
+    return number_and(a, 255)
+}
+
+var bytes_to_unsigned = fn(a, b) {
+    return number_or(
+        left_shift(
+            byte_to_unsigned(a),
+            8
+        ),
+        byte_to_unsigned(b)
+    )
+}
+
+var bytes_to_unsigned32 = fn(a, b, c, d) {
+    var x = 256
+    var aa = byte_to_unsigned(a) * x * x * x 
+    var bb = byte_to_unsigned(b) * x * x
+    var cc = byte_to_unsigned(c) * x
+    var dd = byte_to_unsigned(d)
+    return aa + bb + cc + dd
+}
+
+var dn = "example"
+var dx = "com"
+var dns = "8.8.8.8" 
+
+var trx = [
+    random(0, 127),
+    random(0, 127)
+]
+var header = [
+    1, 0, 
+    0, 1,
+    0, 0,
+    0, 0,
+    0, 0
+]
+
+var d = ord_arr(dn)
+var x = ord_arr(dx)
+
+var a = array_extend_all([
+    trx,
+    header,
+    [len(d)],
+    d,
+    [len(x)],
+    x,
+    [0],
+    [0, 1],
+    [0, 1]
+])
+
+println("Simple, incomplete, DNS query example")
+println("using Singkong programming language")
+println("Query: " + dn + "." + dx)
+var sock = udp_socket()
+udp_send_byte_array(sock, a, dns, 53)
+var r = udp_receive(sock)
+if (r != null) {
+    var res = r[1]
+    if (slice(res, 0, 2) == trx) {
+        println("The transaction ID matched: " + trx)
+        var data = slice(res, 2, len(res))
+        var flag = bytes_to_unsigned(data[0], data[1])
+        var bflag = to_bin(flag)
+        if (bflag[0] == "1") {
+            println("This is a response")
+            var flag_op = from_bin(slice(bflag, 1, 5))
+            if (flag_op == 0) {
+                println("From a standard query")
+            } else {
+                println("Opcode: " + flag_op)
+            }
+            var flag_aa = bflag[5]
+            if (flag_aa == "0") {
+                println("Not an authoritative answer")
+            } else {
+                println("An authoritative answer")
+            }
+            var flag_tc = bflag[6]
+            if (flag_tc == "0") {
+                println("Message was not truncated")
+            } else {
+                println("Message was truncated, exit.")
+                exit()
+            }
+            var flag_rd = bflag[7]
+            if (flag_rd == "1") {
+                println("Recursion was desired")
+            } else {
+                println("Recursion was not desired")
+            }
+            var flag_ra = bflag[8]
+            if (flag_ra == "0") {
+                println("Recursion was not available")
+            } else {
+                println("Recursion was available")
+            }
+            if ((bflag[9] == "0") 
+                & (bflag[10] == "0")
+                & (bflag[11] == "0")) {
+                println("Reserved bits are zero. Correct.")
+            } else {
+                println("Reserved bits are not zero. Protocol violation.")
+            }
+            var flag_rcode = from_bin(slice(bflag, 12, 16))
+            if (flag_rcode == 0) {
+                println("Successful response.")
+            } else {
+                println("Response code: " + flag_rcode)
+            }
+            var qdcount = bytes_to_unsigned(data[2], data[3])
+            println("Question count: " + qdcount)
+            var ancount = bytes_to_unsigned(data[4], data[5])
+            println("Answer count: " + ancount)
+            var nscount = bytes_to_unsigned(data[6], data[7])
+            println("Authority record count: " + nscount)
+            var arcount = bytes_to_unsigned(data[8], data[9])
+            println("Additional record count: " + arcount)
+            var qlen = byte_to_unsigned(data[10])
+            println("Query name length: " + qlen)
+            var i = 11
+            var qdom = []
+            each(slice(data, i, i + qlen), fn(e, i) {
+                qdom + chr(byte_to_unsigned(e))
+            })
+            println("Query domain: " + qdom)
+            var i = i + qlen
+            var qlenx = byte_to_unsigned(data[i])
+            println("Query ext length: " + qlenx)
+            var i = i + 1
+            var qext = []
+            each(slice(data, i, i + qlenx), fn(e, i) {
+                qext + chr(byte_to_unsigned(e))
+            })
+            println("Query ext: " + qext)
+            var i = i + qlenx
+            if (data[i] == 0) {
+                println("Query name OK")
+                var i = i + 1
+                var qtype = bytes_to_unsigned(data[i], data[i+1])
+                if (qtype == 1) {
+                    println("Type: 1, A, Host Address")
+                } else {
+                    println("Type: " + qtype)
+                }
+                var i = i + 2
+                var qclass = bytes_to_unsigned(data[i], data[i+1])
+                if (qclass == 1) {
+                    println("Class: 1, IN, Internet")
+                } else {
+                    println("Class: " + qclass)
+                }
+                var i = i + 2
+                println("Answer section")
+                var ans = 0
+                repeat {
+                    var ans = ans + 1
+                    println("Answer: " + ans)
+                    var rr_name = bytes_to_unsigned(data[i], data[i+1])
+                    var i = i + 2
+                    var brr_name = to_bin(rr_name)
+                    var s_brr_name = slice(brr_name, 0, 2)
+                    if (s_brr_name == "11") {
+                        println("A pointer (name compression)")
+                        println("Note: recursive parsing is not performed")
+                        var o_brr_name = slice(brr_name, 3, len(brr_name))
+                        var o_brr_name = from_bin(o_brr_name)
+                        println("Length byte: " + res[o_brr_name])
+                        var ii = o_brr_name + 1
+                        var d_rr_name = slice(
+                            res, 
+                            ii, 
+                            ii + res[o_brr_name]
+                        )
+                        println(chr_arr(d_rr_name))
+                        var ii = ii + res[o_brr_name]
+                        println("Length byte: " + res[ii])
+                        var x_rr_name = slice(
+                            res, 
+                            ii + 1, 
+                            ii + res[ii] + 1
+                        )
+                        println(chr_arr(x_rr_name))
+                    } else {
+                        if (s_brr_name == "00") {
+                            println("The start of a new label sequence")
+                        } else {
+                            println("I don't know what this RR Name means")
+                        }
+                    }
+                    var rr_type = bytes_to_unsigned(data[i], data[i+1])
+                    var i = i + 2
+                    println("RR Type: " + rr_type)
+                    if (rr_type == 1) {
+                        println("An A Record")
+                    }
+                    var rr_class = bytes_to_unsigned(data[i], data[i+1])
+                    var i = i + 2
+                    println("RR Class: " + rr_class)
+                    if (rr_class == 1) {
+                        println("IN (Internet)")
+                    }
+                    var rr_ttl = bytes_to_unsigned32(
+                        data[i], 
+                        data[i+1],
+                        data[i+2],
+                        data[i+3]
+                    )
+                    var i = i + 4
+                    println("Time To Live: " + rr_ttl)
+                    var rr_rd = bytes_to_unsigned(data[i], data[i+1])
+                    var i = i + 2
+                    println("RR RD Length: " + rr_rd)
+                    var rr_rdata = slice(data, i, i + rr_rd)
+                    var i = i + rr_rd
+                    var urr_rdata = []
+                    each(rr_rdata, fn(e, i) {
+                        urr_rdata + byte_to_unsigned(e)
+                    })
+                    println("IP: " + urr_rdata)
+                    if (ans == ancount) {
+                        return null
+                    }
+                }
+                println("Authority section and additional section are not interpreted.")
+            } else {
+                println("Query name was not terminated")
+            }
+        } else {
+            println("This is a query")
+        }
+    } else {
+        println("The transaction ID did not match")
+    }
+}
