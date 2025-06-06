@@ -38,29 +38,6 @@ var chr_arr = fn(s) {
     return res
 }
 
-var byte_to_unsigned = fn(a) {
-    return number_and(a, 255)
-}
-
-var bytes_to_unsigned = fn(a, b) {
-    return number_or(
-        left_shift(
-            byte_to_unsigned(a),
-            8
-        ),
-        byte_to_unsigned(b)
-    )
-}
-
-var bytes_to_unsigned32 = fn(a, b, c, d) {
-    var x = 256
-    var aa = byte_to_unsigned(a) * x * x * x 
-    var bb = byte_to_unsigned(b) * x * x
-    var cc = byte_to_unsigned(c) * x
-    var dd = byte_to_unsigned(d)
-    return aa + bb + cc + dd
-}
-
 var dn = "example"
 var dx = "com"
 var dns = "8.8.8.8" 
