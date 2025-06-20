@@ -33,7 +33,7 @@ var ord_arr = fn(s) {
 var chr_arr = fn(s) {    
     var res = []
     each(s, fn(e, i) {
-        res + chr(e)
+        res + chr(byte_to_unsigned(e))
     })
     return res
 }
@@ -139,19 +139,13 @@ if (r != null) {
             var qlen = byte_to_unsigned(data[10])
             println("Query name length: " + qlen)
             var i = 11
-            var qdom = []
-            each(slice(data, i, i + qlen), fn(e, i) {
-                qdom + chr(byte_to_unsigned(e))
-            })
+            var qdom = chr_arr(slice(data, i, i + qlen))
             println("Query domain: " + qdom)
             var i = i + qlen
             var qlenx = byte_to_unsigned(data[i])
             println("Query ext length: " + qlenx)
             var i = i + 1
-            var qext = []
-            each(slice(data, i, i + qlenx), fn(e, i) {
-                qext + chr(byte_to_unsigned(e))
-            })
+            var qext = chr_arr(slice(data, i, i + qlenx))
             println("Query ext: " + qext)
             var i = i + qlenx
             if (data[i] == 0) {
