@@ -40,7 +40,8 @@ var chr_arr = fn(s) {
 
 var dn = "example"
 var dx = "com"
-var dns = "8.8.8.8" 
+var dns = "8.8.8.8"
+var timeout = 8000
 
 var trx = [
     random(0, 127),
@@ -74,6 +75,7 @@ println("using Singkong programming language")
 println("Query: " + dn + "." + dx)
 var sock = udp_socket()
 udp_send_byte_array(sock, a, dns, 53)
+udp_set_timeout(sock, timeout)
 var r = udp_receive(sock)
 if (r != null) {
     var res = r[1]
@@ -246,4 +248,6 @@ if (r != null) {
     } else {
         println("The transaction ID did not match")
     }
+} else {
+    println("Error receiving data, likely timed out after " + timeout + "ms")
 }
