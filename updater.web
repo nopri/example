@@ -1,0 +1,19 @@
+load_module("json")
+var latest = "c45d492d17cb2ad0cd44a0cd40b021e5"
+var r = {
+    "hash": latest,
+    "url": "https://nopri.github.io/Singkong.jar",
+    "error": ""
+}
+var g = cgi_get()
+var h = ifnull(g["hash"], "")
+if (h == latest) {
+    set(r, "url", "")
+}
+cgi_header(
+    {
+        "Content-Type": "application/json"
+    }
+)
+println(json_string(r))
+exit()

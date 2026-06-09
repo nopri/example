@@ -1,0 +1,214 @@
+#
+    updater.singkong
+    Verifies and updates the local JAR file 
+    against the server before running it.
+
+    Runs in both graphical and text-based environments.
+
+    https://github.com/nopri/example
+    Started by: Noprianto <nop@noprianto.com>
+    
+    This code has been placed in the public domain.
+        
+    How to bundle the application and Singkong.jar 
+    into a standalone JAR:
+    Note: You will need the jar tool, 
+    which is included with the JDK.
+    - Please rename this file to main.singkong
+    - Configure the following variables:
+      name: application name (default: Updater).
+      jarfile: jar file.
+      width: frame width.
+      height: frame height.
+      server: Set this to your server's base URL.
+      param_add: Additional parameter (optional)
+      messages: Adjust these strings to customize
+      the updater's text.
+      This file contains the messages in Indonesian. 
+      Please see the updater.singkong file 
+      for messages in English.
+    - Download Singkong.jar and place it in 
+      the same directory as main.singkong
+    - Copy Singkong.jar to Updater.jar
+      (or any filename of your choice, 
+      keeping the .jar extension)
+    - Run:
+      jar uf Updater.jar main.singkong
+      (or: jar uf <file>.jar main.singkong) 
+
+    Server:
+    Note: Please also see updater.web file for 
+    the server-side implementation.
+    The server is expected to handle an HTTP GET 
+    request with the following query parameters:
+    - task (required): Must be set to "update".
+    - hash (required): The MD5 hash of the file.
+    
+    In response, the server is expected to return 
+    a JSON object (application/json) containing 
+    the following fields:
+    - hash: The MD5 hash of the file (string).
+    - url: The URL to the file (string).
+      If no update is available, 
+      the server should return url as 
+      an empty string.
+    - error: The error message (string).
+      If error is non-empty, the updater will 
+      display it and quit, regardless of 
+      whether an update is available.
+
+;
+require(12.1)
+
+load_module("json")
+
+var name = "Updater"
+var jarfile = ""
+var width = 400
+var height = 400
+var server = ""
+var param_add = "&"
+var messages = {
+    "_empty": "",
+    "title_info": "Informasi",
+    "title_error": "Kesalahan",
+    "error_file": "Harap isikan variabel jarfile.",
+    "error_url": "Harap isikan variabel server.",
+    "error_connect": "Gagal koneksi ke server.",
+    "error_response": "Respon dari server tidak valid.",
+    "error_download": "Gagal mendownload atau menyimpan update.",
+    "error_download_check": "File update tidak ditemukan.",
+    "error_download_verify": "Gagal verifikasi update.",
+    "error_runtime": "Gagal mendapatkan runtime.",
+    "info_file_hash": "Mengkalkulasi checksum file lokal...",
+    "info_connect": "Melakukan koneksi ke server...",
+    "info_response": "Memroses respon...",
+    "info_update_check": "Memeriksa ketersediaan update...",
+    "info_update_needed": "Update tersedia, sedang mendownload...",
+    "info_update_not_needed": "Update tidak tersedia.",
+    "info_download_check": "Memeriksa update yang didownload...",
+    "info_download_verify": "Memverifikasi integritas update...",
+    "info_download_exists": "Upload yang didownload ditemukan.",
+    "info_download_verified": "Verifikasi update berhasil.",
+    "info_runtime_check": "Memeriksa runtime environment...",
+    "info_program_run": "Menjalankan aplikasi...",
+    "info_done": "Aplikasi ditutup."
+}
+
+var _ = fn(k) {
+    var m = messages[k]
+    if (m == null) {
+        return k
+    }
+    return m
+}
+
+var add_message = fn(s, t) {
+    if (gui() == false) {
+        println(s)
+    } else {
+        var c = get(t, "contents")
+        var c = c + newline() + s
+        config(t, "contents", c)
+    }
+}
+
+var t = null
+if (gui()) {
+    reset()
+    title(name)
+    size(width, height)
+    var t = component("edit", "", true)
+    add(t)
+    show()
+}
+add_message(name, t)
+
+if (empty(jarfile)) {
+    message(_("error_file"), _("title_error"))
+    exit()
+}
+if (empty(server)) {
+    message(_("error_url"), _("title_error"))
+    exit()
+}
+
+var n = jarfile
+var f = cwd() + separator() + n 
+add_message(_("info_file_hash"), t)
+var h = md5_file(f)
+if (h == null) {
+    var h = ""
+}
+
+add_message(_("info_connect"), t)
+var g = http_get(server + "?task=update&hash=" + h + param_add)
+var o = http_response_ok(g)
+if (o == null) {
+    message(_("error_connect"), _("title_error"))
+    exit()
+}
+
+add_message(_("info_response"), t)
+var o = json_parse(o)
+if (!is(o, "HASH")) {
+    message(_("error_response"), _("title_error"))
+    exit()
+}
+var e = ifnull(o["error"], "")
+var x = ifnull(o["hash"], "")
+if (!empty(e)) {
+    message(e, _("title_error"))
+    exit()
+}
+
+var needed = false
+add_message(_("info_update_check"), t)
+var u = ifnull(o["url"], "")
+if (!empty(u)) {
+    var needed = true
+    add_message(_("info_update_needed"), t)
+    var d = http_get_file(u, n)
+    if (d == null) {
+        message(_("error_download"), _("title_error"))
+        exit()
+    }
+} else {
+    add_message(_("info_update_not_needed"), t)
+}
+
+if (needed == true) {
+    add_message(_("info_download_check"), t)
+    var s = stat(f)
+    if (s["exists"] != true) {
+        message(_("error_download_check"), _("title_error"))
+        exit()
+    } else {
+        add_message(_("info_download_exists"), t)
+    }
+
+    add_message(_("info_download_verify"), t)
+    if (md5_file(f) != x) {
+        message(_("error_download_verify"), _("title_error"))
+        exit()
+    } else {
+        add_message(_("info_download_verified"), t)
+    }
+}
+
+add_message(_("info_runtime_check"), t)
+var p = runtime_program()
+if (p == "") {
+    message(_("error_runtime"), _("title_error"))
+    exit()
+}
+add_message(_("info_program_run"), t)
+
+system([
+    p,
+    "-jar",
+    f
+], true)
+add_message(_("info_done"), t)
+exit()
+
