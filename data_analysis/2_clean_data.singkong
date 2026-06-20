@@ -1,0 +1,76 @@
+load_module("csv")
+
+var P_BAKWAN = "bakwan"
+var P_KOPI = "kopi"
+var P_SING_K = "singkong keju"
+var PRODUCTS = [P_BAKWAN, P_KOPI, P_SING_K]
+
+var NUM = "(\d+)"
+
+var typo = {"kpi": P_KOPI, "sinkongkeju": P_SING_K}
+
+var a = csv_from_string(",", read("data.csv"))
+
+var clean_datetime = fn(s) {
+    var s = trim(ifnull(s, ""))
+    if (empty(s)) {
+        return null
+    }
+    if (in(s, "/")) {
+        var x = split(s, "/")
+        if (len(x) == 3) {
+            var t = split(x[2], " ")
+            if (len(t) == 2) {
+                var tt = t[0] + "-" + x[1] + "-" 
+                    + x[0] + " " +  t[1]
+                return datetime(tt, @, true)
+            }
+        }
+    }
+    return datetime(s, @, true)
+}
+
+var clean_product = fn(s) {
+    var s = replace(lower(trim(ifnull(s, ""))), " ", "")
+    if (in(PRODUCTS, s)) {
+        return s
+    }
+    var t = typo[s]
+    if (t != null) {
+        return t
+    }
+    return null
+}
+
+var clean_qty = fn(s) {
+    var s = replace(lower(trim(ifnull(s, ""))), " ", "")
+    var a = extract(s, NUM)
+    if (empty(a)) {
+        var a = ["1"]
+    }
+    return number(a[0])
+}
+
+var clean_price = fn(s) {
+    var s = replace(lower(trim(ifnull(s, ""))), " ", "")
+    var a = extract(s, NUM)
+    if (empty(a)) {
+        return null
+    }
+    return number(a[0])
+}
+
+var r = []
+each(a, fn(e, i) {
+    if (i > 0) {
+        var d = clean_datetime(e[0])
+        var p = clean_product(e[1])
+        var q = clean_qty(e[2])
+        var s = clean_price(e[3])
+        var c = [d, p, q, s]
+        if (!in(c, null)) {
+            r + c
+        } 
+    }
+})
+write("data_clean.csv", csv_to_string(",", r))
