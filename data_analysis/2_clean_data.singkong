@@ -8,6 +8,9 @@ var PRODUCTS = [P_BAKWAN, P_KOPI, P_SING_K]
 var NUM = "(\d+)"
 
 var typo = {"kpi": P_KOPI, "sinkongkeju": P_SING_K}
+each(PRODUCTS, fn(e, i) {
+    typo + {replace(e, " ", ""): e}
+})
 
 var a = csv_from_string(",", read("data.csv"))
 
@@ -48,7 +51,7 @@ var clean_qty = fn(s) {
     if (empty(a)) {
         var a = ["1"]
     }
-    return number(a[0])
+    return number(a[0], 0, true)
 }
 
 var clean_price = fn(s) {
@@ -57,7 +60,7 @@ var clean_price = fn(s) {
     if (empty(a)) {
         return null
     }
-    return number(a[0])
+    return number(a[0], 0, true)
 }
 
 var r = []
