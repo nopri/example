@@ -1,0 +1,105 @@
+load_module("csv")
+load_module("util")
+
+var a = csv_from_string(",", read("data_clean.csv"))
+var r_a = []
+
+var a_qty = []
+var a_price = []
+var a_total = []
+var sold = {}
+var colors = ["red", "green", "blue", "yellow"]
+
+var ng = number_group_p_c
+each(a, fn(e, i) {
+    var p = e[1]
+    var q = number(e[2])
+    var s = number(e[3])
+    var t = q * s
+    a_qty + q
+    a_price + s
+    a_total + t
+    r_a + [
+        e[0], 
+        upper(e[1], true),
+        ng(q),
+        ng(s),
+        ng(t)
+    ]
+    var o = sold[p]
+    if (o == null) {
+        set(sold, p, 0)
+    }
+    set(sold, p, sold[p]+q)
+})
+
+var q_mean = mean(a_qty)
+var q_median = median(a_qty)
+var q_mode = mode(a_qty)
+var s_mean = mean(a_price)
+var s_median = median(a_price)
+var s_mode = mode(a_price)
+var t_mean = mean(a_total)
+var t_median = median(a_total)
+var t_mode = mode(a_total)
+
+r_a + ["Jumlah Total", "", ng(sum(a_qty)), "", ng(sum(a_total))]
+r_a + ["Terbilang", "", words_id(string(sum(a_qty))), "", 
+    words_id(string(sum(a_total)))]
+
+reset()
+title("Dashboard")
+
+var t_a_cols = "Waktu,Produk,Jumlah,Harga,Total"
+var t_a = component("table", t_a_cols, true)
+table_right(t_a, 2)
+table_right(t_a, 3)
+table_right(t_a, 4)
+config(t_a, "contents", r_a)
+var g_a = component("grid", "")
+grid_add(g_a, t_a, 0, 0, 1, 1, 1, 1, 3, 0) 
+
+var t_b_cols = "Metrik,Nilai"
+var t_b = component("table", t_b_cols, true)
+table_right(t_b, 1)
+var r_b = [
+    ["NILAI TRANSAKSI", ""],
+    ["Rata-rata nilai transaksi", ng(t_mean)],
+    ["Nilai transaksi paling mewakili", ng(t_median)],
+    ["Nilai transaksi paling sering muncul", 
+        ng(t_mode[0]) + " (" + t_mode[1] + " kali)"],
+    ["", ""],
+    ["HARGA PRODUK", ""],
+    ["Rata-rata harga produk", ng(s_mean)],
+    ["Harga produk paling mewakili", ng(s_median)],
+    ["Harga produk paling sering muncul", 
+        ng(s_mode[0]) + " (" + s_mode[1] + " kali)"],
+    ["", ""],
+    ["JUMLAH PEMBELIAN", ""],
+    ["Rata-rata jumlah pembelian", ng(q_mean)],
+    ["Jumlah pembelian paling mewakili", ng(q_median)],
+    ["Jumlah pembelian paling sering muncul", 
+        ng(q_mode[0]) + " (" + q_mode[1] + " kali)"]
+]
+config(t_b, "contents", r_b)
+
+var c = component("barchart", "")
+config(c, "foreground", "black")
+config(c, "background", "white")
+config(c, "font", ["monospaced", 1, 20])
+config(c, "text", "Paling Laku")
+var r_c = []
+each(sort_string(keys(sold)), fn(e, i) {
+    var q = sold[e]
+    r_c + [q, e + " " + q, random(colors)]
+})
+config(c, "contents", r_c)
+var g_b = component("grid", "")
+grid_add(g_b, t_b, 0, 0, 1, 1, 0.5, 1, 3, 0) 
+grid_add(g_b, c, 1, 0, 1, 1, 0.5, 1, 3, 0) 
+
+var g = component("grid", "")
+grid_add(g, g_a, 0, 0, 1, 1, 1, 0.4, 3, 0)
+grid_add(g, g_b, 0, 1, 1, 1, 0.5, 0.6, 3, 0)
+add(g)
+show()
