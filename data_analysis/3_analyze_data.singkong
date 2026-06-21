@@ -8,7 +8,8 @@ var a_qty = []
 var a_price = []
 var a_total = []
 var sold = {}
-var colors = ["red", "green", "blue", "yellow"]
+var sold_total = {}
+var colors = ["red", "green", "blue", "pink", "yellow"]
 
 var ng = number_group_p_c
 each(a, fn(e, i) {
@@ -31,17 +32,28 @@ each(a, fn(e, i) {
         set(sold, p, 0)
     }
     set(sold, p, sold[p]+q)
+    var ot = sold_total[p]
+    if (ot == null) {
+        set(sold_total, p, 0)
+    }
+    set(sold_total, p, sold_total[p]+t)
 })
 
 var q_mean = mean(a_qty)
 var q_median = median(a_qty)
 var q_mode = mode(a_qty)
+var q_range = range_(a_qty)
+var q_std = standard_deviation(a_qty)
 var s_mean = mean(a_price)
 var s_median = median(a_price)
 var s_mode = mode(a_price)
+var s_range = range_(a_price)
+var s_std = standard_deviation(a_price)
 var t_mean = mean(a_total)
 var t_median = median(a_total)
 var t_mode = mode(a_total)
+var t_range = range_(a_total)
+var t_std = standard_deviation(a_total)
 
 r_a + ["Jumlah Total", "", ng(sum(a_qty)), "", ng(sum(a_total))]
 r_a + ["Terbilang", "", words_id(string(sum(a_qty))), "", 
@@ -68,35 +80,54 @@ var r_b = [
     ["Nilai transaksi paling mewakili", ng(t_median)],
     ["Nilai transaksi paling sering muncul", 
         ng(t_mode[0]) + " (" + t_mode[1] + " kali)"],
+    ["Rentang nilai transaksi", ng(t_range)],
+    ["Variasi nilai transaksi (std dev)", ng(t_std)],
     ["", ""],
     ["HARGA PRODUK", ""],
     ["Rata-rata harga produk", ng(s_mean)],
     ["Harga produk paling mewakili", ng(s_median)],
     ["Harga produk paling sering muncul", 
         ng(s_mode[0]) + " (" + s_mode[1] + " kali)"],
+    ["Rentang harga produk", ng(s_range)],
+    ["Variasi harga produk (std dev)", ng(s_std)],
     ["", ""],
     ["JUMLAH PEMBELIAN", ""],
     ["Rata-rata jumlah pembelian", ng(q_mean)],
     ["Jumlah pembelian paling mewakili", ng(q_median)],
     ["Jumlah pembelian paling sering muncul", 
-        ng(q_mode[0]) + " (" + q_mode[1] + " kali)"]
+        ng(q_mode[0]) + " (" + q_mode[1] + " kali)"],
+    ["Rentang jumlah pembelian", ng(q_range)],
+    ["Variasi jumlah pembelian (std dev)", ng(q_std)]
 ]
 config(t_b, "contents", r_b)
 
-var c = component("barchart", "")
-config(c, "foreground", "black")
-config(c, "background", "white")
-config(c, "font", ["monospaced", 1, 20])
-config(c, "text", "Paling Laku")
-var r_c = []
+var c_a = component("barchart", "")
+config(c_a, "foreground", "black")
+config(c_a, "background", "white")
+config(c_a, "font", ["monospaced", 1, 14])
+config(c_a, "text", "Jumlah Terjual")
+var r_c_a = []
 each(sort_string(keys(sold)), fn(e, i) {
     var q = sold[e]
-    r_c + [q, e + " " + q, random(colors)]
+    r_c_a + [q, e + " " + q, random(colors)]
 })
-config(c, "contents", r_c)
+config(c_a, "contents", r_c_a)
+
+var c_b = component("barchart", "")
+config(c_b, "foreground", "black")
+config(c_b, "background", "white")
+config(c_b, "font", ["monospaced", 1, 14])
+config(c_b, "text", "Omzet Penjualan")
+var r_c_b = []
+each(sort_string(keys(sold_total)), fn(e, i) {
+    var q = sold_total[e]
+    r_c_b + [q, e + " " + q, random(colors)]
+})
+config(c_b, "contents", r_c_b)
 var g_b = component("grid", "")
 grid_add(g_b, t_b, 0, 0, 1, 1, 0.5, 1, 3, 0) 
-grid_add(g_b, c, 1, 0, 1, 1, 0.5, 1, 3, 0) 
+grid_add(g_b, c_a, 1, 0, 1, 1, 0.25, 1, 3, 0) 
+grid_add(g_b, c_b, 2, 0, 1, 1, 0.25, 1, 3, 0) 
 
 var g = component("grid", "")
 grid_add(g, g_a, 0, 0, 1, 1, 1, 0.4, 3, 0)
