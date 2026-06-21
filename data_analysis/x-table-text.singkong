@@ -1,0 +1,60 @@
+load_module("csv")
+load_module("util")
+load_module("ui_util")
+
+var a = csv_from_string(",", read("data_clean.csv"))
+var r = []
+
+var a_qty = []
+var a_total = []
+
+var ng = number_group_p_c
+each(a, fn(e, i) {
+    var p = e[1]
+    var q = number(e[2])
+    var s = number(e[3])
+    var t = q * s
+    a_qty + q
+    a_total + t
+    r + [
+        e[0], 
+        upper(e[1], true),
+        ng(q),
+        ng(s),
+        ng(t)
+    ]
+})
+
+r + ["Jumlah Total", "", ng(sum(a_qty)), "", ng(sum(a_total))]
+
+reset()
+title("Report")
+
+var t_cols = "Waktu,Produk,Jumlah,Harga,Total"
+var t = component("table", t_cols, true)
+table_right(t, 2)
+table_right(t, 3)
+table_right(t, 4)
+config(t, "contents", r)
+var b = component("button", "Simpan")
+add(t)
+add_s(b)
+show()
+
+event(b, fn() {
+    var f = "report.txt"
+    var h = [20, 20, 8, 8, 10]
+    var c = table_to_text(t, h)
+    var c = c + newline() + 
+        "Jumlah terjual : " + words_id(string(sum(a_qty))) 
+    var c = c + newline() + 
+        "Omzet penjualan: " + words_id(string(sum(a_total))) 
+    var c = c + newline() + 
+        "Dihasilkan pada: " + @ 
+    var w = write(f, c)
+    if (w == true) {
+        message(f + " berhasil disimpan") 
+    } else {
+        message(f + " gagal disimpan") 
+    }
+})
