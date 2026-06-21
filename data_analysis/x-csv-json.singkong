@@ -1,0 +1,5 @@
+load_module("csv")
+load_module("json")
+
+var a = csv_from_string(",", read("data.csv"))
+write("data.json", json_string(a))
