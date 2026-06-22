@@ -1,0 +1,100 @@
+load_module("csv")
+load_module("util")
+load_module("db_util")
+
+var P_BAKWAN = "bakwan/6000"
+var P_KOPI = "kopi/5000"
+var P_SING_K = "singkong keju/40000"
+var PRODUCTS = [P_BAKWAN, P_KOPI, P_SING_K]
+
+var d = db_connect_embed("data")
+var ng = number_group_p_c
+
+var load_data = fn() {
+    var a = db_query_single(d, "
+        select waktu,produk,jumlah,harga,total
+        from sales
+        order by waktu asc",
+        []
+    )
+    if (a == null) {
+        var a = [[]]
+    }
+    var a = a[0]
+    var r = []
+    
+    var a_qty = []
+    var a_price = []
+    var a_total = []
+
+    each(a, fn(e, i) {
+        var p = e[1]
+        var q = e[2]
+        var s = e[3]
+        var t = e[4]
+        a_qty + q
+        a_total + t
+        r + [
+            e[0], 
+            upper(e[1], true),
+            ng(q),
+            ng(s),
+            ng(t)
+        ]
+    })
+    r + ["Jumlah Total", "", ng(sum(a_qty)), "", ng(sum(a_total))]
+    r + ["Terbilang", "", words_id(string(sum(a_qty))), "", 
+        words_id(string(sum(a_total)))]
+    return r
+}
+
+var save_data = fn(p, s, q) {
+    db_insert(d, "sales", {
+        "produk": p,
+        "jumlah": q,
+        "harga": s,
+        "total": q * s
+    })
+}
+
+var set_contents = fn(t) {
+    var res = load_data()
+    config(t, "contents", res)
+    table_scroll(t, len(res) - 1)
+}
+
+reset()
+title("Sales")
+
+var t_cols = "Waktu,Produk,Jumlah,Harga,Total"
+var t = component("table", t_cols, true)
+table_right(t, 2)
+table_right(t, 3)
+table_right(t, 4)
+set_contents(t)
+var g_a = component("grid", "")
+grid_add(g_a, t, 0, 0, 1, 1, 1, 1, 3, 0) 
+
+var p = component("combobox", "")
+config(p, "contents", PRODUCTS)
+var q = component("spin", "1,1,200,1")
+var g_b = component("grid", "")
+var b = component("button", "Simpan")
+grid_add(g_b, p, 0, 0, 1, 1, 0.5, 1, 1, 0) 
+grid_add(g_b, q, 1, 0, 1, 1, 0.2, 1, 1, 0) 
+grid_add(g_b, b, 2, 0, 1, 1, 0.3, 1, 1, 0) 
+
+var g = component("grid", "")
+grid_add(g, g_a, 0, 0, 1, 1, 1, 0.8, 3, 0)
+grid_add(g, g_b, 0, 1, 1, 1, 1, 0.2, 3, 0)
+add(g)
+show()
+
+event(b, fn() {
+    if (confirm("Ingin menyimpan?") == "OK") {
+        var _p = split(get(p, "text"), "/")
+        var _q = get(q, "contents")
+        save_data(_p[0], number(_p[1]), _q)
+        set_contents(t)
+    }
+})
