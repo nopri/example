@@ -1,0 +1,9 @@
+load_module("json")
+
+var u = "https://raw.githubusercontent.com/nopri/example/refs/heads/main/data_analysis/data.json"
+var r = http_get(u)
+if (r != null) {
+    var d = r[2]
+    var a = json_parse(d)
+    println(a)
+}
